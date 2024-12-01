@@ -12,12 +12,13 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 class ImageSet(Dataset):
-    def __init__(self, image_paths, image_labels, transforms, root_adj = ''):
+    def __init__(self, image_paths, image_labels, transforms, classes, root_adj = ''):
         super().__init__()
         self.images_paths = image_paths
         self.transforms = transforms
         self.image_labels = image_labels
         self.root_adj = root_adj # adjust path based on your folder structure
+        self.classes = classes
 
     def __len__(self):
         return len(self.images_paths)
@@ -26,7 +27,15 @@ class ImageSet(Dataset):
         image = Image.open(self.root_adj + self.images_paths[idx])
         label = self.image_labels[idx]
         image = self.transforms(image)
-        bbox = torch.zeros(2)
+        size = image.shape[1]
+        bbox = torch.zeros(5)
+
+        bbox[1] = 0.5 # center
+        bbox[2] = 0.5
+        
         if label == 1:
-            bbox = bbox + image.shape[1]
-        return image, label, bbox
+            bbox[-2:] += 1
+        for key in self.classes:
+            if key in self.images_paths[idx].lower():
+                bbox[0] = self.classes[key]
+        return image, bbox
