@@ -1,0 +1,10 @@
+path: C:/Users/123/HW_BME547_repos/MAML_Data/bone_fracture_sample # Root directory of your dataset
+train: images/train  # Path to training images
+val: images/val  # Path to validation images
+
+# Number of classes
+nc: 1
+
+# Class names
+names:
+  0: 'bone'
