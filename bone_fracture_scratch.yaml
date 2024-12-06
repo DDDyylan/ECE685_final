@@ -1,7 +1,6 @@
 path: C:/duke_assignments/bone_fracture  # Root directory of your dataset
 train: images/train  # Path to training images
 val: images/val  # Path to validation images
-test: images/test
 
 # Number of classes
 nc: 1
