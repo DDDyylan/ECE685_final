@@ -10,6 +10,7 @@ from PIL import Image
 import os
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from PIL import ImageFile
 
 class ImageSet(Dataset):
     def __init__(self, image_paths, image_labels, transforms, classes, root_adj = ''):
@@ -24,6 +25,7 @@ class ImageSet(Dataset):
         return len(self.images_paths)
     
     def __getitem__(self, idx):
+        ImageFile.LOAD_TRUNCATED_IMAGES = True
         image = Image.open(self.root_adj + self.images_paths[idx])
         label = self.image_labels[idx]
         image = self.transforms(image)
@@ -42,22 +44,22 @@ class ImageSet(Dataset):
                 bbox[0] = self.classes[key]
         return image, bbox
     
-class ImageBoxSet(Dataset):
-    def __init__(self, image_paths, image_labels, transforms, root_adj = ''):
-        super().__init__()
-        self.images_paths = image_paths
-        self.transforms = transforms
-        self.image_labels = image_labels
-        self.root_adj = root_adj # adjust path based on your folder structure
+# class ImageBoxSet(Dataset):
+#     def __init__(self, image_paths, image_labels, transforms, root_adj = ''):
+#         super().__init__()
+#         self.images_paths = image_paths
+#         self.transforms = transforms
+#         self.image_labels = image_labels
+#         self.root_adj = root_adj # adjust path based on your folder structure
 
-    def __len__(self):
-        return len(self.images_paths)
+#     def __len__(self):
+#         return len(self.images_paths)
     
-    def __getitem__(self, idx):
-        image = Image.open(self.root_adj + self.images_paths[idx])
-        label = self.image_labels[idx]
-        image = self.transforms(image)
-        with open(label, 'r') as f:
-            bbox = f.read().split(' ')
-            bbox = [float(x) for x in bbox]
-        return image, bbox
+#     def __getitem__(self, idx):
+#         image = Image.open(self.root_adj + self.images_paths[idx])
+#         label = self.image_labels[idx]
+#         image = self.transforms(image)
+#         with open(label, 'r') as f:
+#             bbox = f.read().split(' ')
+#             bbox = [float(x) for x in bbox]
+#         return image, bbox
