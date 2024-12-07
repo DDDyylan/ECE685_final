@@ -5,6 +5,14 @@ Train a model on a dataset.
 Usage:
     $ yolo mode=train model=yolov8n.pt data=coco8.yaml imgsz=640 epochs=100 batch=16
 """
+"""
+This file comes from ultralytics/engine. The _do_train function in thie file is modified for MAML pre-training.
+variables with word 'query' in names represent newly added variables for training on the query dataset.
+The specific training process if left unchanged in order to be compatible with all other funuctions implemented
+by ultralyrics.
+
+search keyword project can locate modifications.
+"""
 
 import gc
 import math
@@ -349,32 +357,35 @@ class BaseTrainer:
             self.plot_idx.extend([base_idx, base_idx + 1, base_idx + 2])
         epoch = self.start_epoch
         self.optimizer.zero_grad()  # zero any resumed gradients to ensure stability on train start
-        self.optimizer_query.zero_grad()
+        self.optimizer_query.zero_grad() # project: for query set
         while True:
             self.epoch = epoch
             self.run_callbacks("on_train_epoch_start")
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")  # suppress 'Detected lr_scheduler.step() before optimizer.step()'
                 self.scheduler.step()
-                self.scheduler_query.step()
+                self.scheduler_query.step() # project: for query set
 
             self.model.train()
             if RANK != -1:
                 self.train_loader.sampler.set_epoch(epoch)
             pbar = enumerate(self.train_loader)
-            pbar_query = enumerate(self.query_loader)
+            pbar_query = enumerate(self.query_loader) # project: for query set
             # Update dataloader attributes (optional)
             if epoch == (self.epochs - self.args.close_mosaic):
                 self._close_dataloader_mosaic()
                 self.train_loader.reset()
-                self.query_loader.reset()
+                self.query_loader.reset() # project: for query set
 
             if RANK in {-1, 0}:
                 LOGGER.info(self.progress_string())
                 pbar = TQDM(enumerate(self.train_loader), total=nb)
-                pbar_query = TQDM(enumerate(self.query_loader), total=nb)
+                pbar_query = TQDM(enumerate(self.query_loader), total=nb) # project: for query set
             self.tloss = None
-            torch.save(self.model.state_dict(), 'outer.pth')
+            torch.save(self.model.state_dict(), 'outer.pth') # project: for query set
+            # save the paramters and update it after the loss on query set is calculated
+            # first-order approximation MAML
+
             for i, batch in pbar:
                 self.run_callbacks("on_train_batch_start")
                 # Warmup
@@ -418,7 +429,7 @@ class BaseTrainer:
                         if self.stop:  # training time exceeded
                             break
 
-                # from Jieqi
+                # # project: for query set
                 # torch.save(self.model.state_dict(), 'inner.pth')
                 self.run_callbacks("on_train_outer_batch_start")
                 for i, batch in pbar_query:
@@ -447,7 +458,8 @@ class BaseTrainer:
 
                     # Backward
                     self.scaler.scale(self.loss).backward()
-                    self.model.load_state_dict(torch.load('outer.pth'))
+                    self.model.load_state_dict(torch.load('outer.pth')) # project: for query set
+                    # load previous parameters in-place
                     self.model.train()
 
                     # Optimize - https://pytorch.org/docs/master/notes/amp_examples.html
@@ -464,7 +476,7 @@ class BaseTrainer:
                                 self.stop = broadcast_list[0]
                             if self.stop:  # training time exceeded
                                 break
-                torch.save(self.model, 'outer.pt')
+                torch.save(self.model, 'outer.pt') # save for the next iteration
 
                 # Log
                 if RANK in {-1, 0}:
