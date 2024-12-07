@@ -13,3 +13,6 @@ All the results are stored in /runs/detect folder. Folder names indicate which e
 
 ### Implementation of MAML:
 The implementation of MAML is based on the source code provided by ultralytics. The trainer.py file in /ultralytics/engine is modified to satisfy MAML training process. Optimizer, dataloader, schedular, and training on query set are added in _do_train function. To re-use the code, replace the original source code with the trainer.py file in this repo. In the file, search keyword "project" can locate modifications.
+
+### File paths
+The path requires update for future usage. Training yaml files and notebooks are stored in corresponding folders.

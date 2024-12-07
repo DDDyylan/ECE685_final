@@ -1,0 +1,12 @@
+path: C:/duke_assignments/hand_finger_datasets  # Root directory of your dataset
+train: images/train  # Path to training images
+val: images/val  # Path to validation images
+query: C:/duke_assignments/hand_finger_datasets/images/query
+
+# Number of classes
+nc: 2
+
+# Class names
+names:
+  0: 'hand'
+  1: 'finger'
